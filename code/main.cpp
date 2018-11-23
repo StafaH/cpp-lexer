@@ -5,9 +5,37 @@ Simple lexer to tokenize an input
 string. Useful to solve variety of 
 problems.
 */
+int strlen(char* str)
+{
+	int result = 0;
+	if (!str) return result;
+	while (*str != '\0')
+	{ str++; result++; }
+	return result;
+}
+
+bool strcompare(char *first, char *second)
+{
+	bool result;
+
+	//NOTE: if they start the same but one is shorter, this still returns true
+	// so we should check their size before returning true;
+	for (int i = 0; first[i] != '\0' || second[i] != '\0'; i++)
+	{
+		if (first[i] != second[i])
+		{
+			return false;
+		}
+	}
+	if (strlen(first) != strlen(second)) return false;
+
+	return true;
+}
 
 char* strcopy(char* destination, char* source)
 {
+	//Note: very basic implementation, does not check for overflow
+	// as the rest of the app is limited to char[256]
 	char* temp = destination;
 
 	while (*source != '\0')
@@ -31,15 +59,28 @@ void GetInput(char* dest)
 
 enum TokenType
 {
+	TokenType_IDENTIFIER,
+
 	//Literals
-	TokenType_LETTER,
 	TokenType_DIGIT,
+	TokenType_FLOAT,
+	TokenType_STRING,
+	TokenType_BOOL,
 
 	//Operators
 	TokenType_PLUS,
 	TokenType_MINUS,
 	TokenType_TIMES,
 	TokenType_SLASH,
+	TokenType_PERIOD,
+	TokenType_EQL,
+	TokenType_NOT,
+	TokenType_LSS,
+	TokenType_GTR,
+	TokenType_LEQ,
+	TokenType_GEQ,
+
+	//Seperators
 	TokenType_LPAREN,
 	TokenType_RPAREN,
 	TokenType_LBRACK,
@@ -48,18 +89,22 @@ enum TokenType
 	TokenType_RBRACE,
 	TokenType_SEMICOLON,
 	TokenType_COMMA,
-	TokenType_PERIOD,
 	TokenType_BECOMES,
-	TokenType_EQL,
-	TokenType_NOT,
-	TokenType_LSS,
-	TokenType_GTR,
-	TokenType_LEQ,
-	TokenType_GEQ,
+	
 
-	//Conditionals
+	//Keywords
+	TokenType_IF,
+	TokenType_WHILE,
+	TokenType_FOR,
+	TokenType_RETURN,
+	TokenType_DO,
+	TokenType_NEW,
+	TokenType_DELETE,
+	TokenType_NULL,
+
 
 	//Unique
+	TokenType_UNKNOWN,
 	TokenType_EOF
 };
 
@@ -145,6 +190,7 @@ Token GetToken(Tokenizer& tokenizer)
 		char value[] = "EndSymbol";
 		strcopy(token.contents, value);
 	} break;
+
 	case '(': token.type = TokenType_LPAREN; break;
 	case ')': token.type = TokenType_RPAREN; break;
 	case '{': token.type = TokenType_LBRACE; break;
@@ -166,11 +212,41 @@ Token GetToken(Tokenizer& tokenizer)
 	case '<': token.type = TokenType_LSS; break;
 	case '!': token.type = TokenType_NOT; break;
 
-	case '"' : 
+	//TODO: single quotes are skipped for now
+	//Note: should quotes be a single token, or each quote symbol is a token,
+	// and every token inbetween can be interpreted as a quote
+	case '"':
 	{
-		// Handle Quoatations
-	}
-	// Hande single quotes
+		token.type = TokenType_STRING;
+		char buffer[256];
+		char *index = buffer;
+
+		//We need to skip the " and start copying from the next char
+		tokenizer.location++;
+
+		while (tokenizer.location[0] != '"' && token.length < 255)
+		{
+			index[0] = tokenizer.location[0];
+			tokenizer.location++;
+			index++;
+			token.length++;
+
+			//Note: how do we properly handle unclosed quotation?
+			//if we reached the end of the input then we know for sure something went wrong. 
+			if (tokenizer.location[0] == '\0')
+			{
+				//For now we can just print an error and skip copying our values
+				printf("you forgot to close the quotation mark\n");
+				token.type = TokenType_UNKNOWN;
+				break;
+			}
+		}
+
+		// We also skip the end " 
+		tokenizer.location++; 
+		index[0] = '\0';
+		strcopy(token.contents, buffer);
+	}break;
 
 	default:
 	{
@@ -178,34 +254,92 @@ Token GetToken(Tokenizer& tokenizer)
 		{
 			char buffer[256];
 			char* index = buffer;
-			token.type = TokenType_LETTER;
+			token.type = TokenType_IDENTIFIER;
 
-			while (IsLetter(tokenizer.location[0]))
+			while (IsLetter(tokenizer.location[0]) || IsNumeric(tokenizer.location[0]) || tokenizer.location[0] == '_')
 			{
-				index[0] = tokenizer.location[0];
+				*index = *tokenizer.location;
 				tokenizer.location++;
 				index++;
 				token.length++;
+
+				if (token.length == 255) break;
 			}
-			index[0] = '\0';
-			//token.contents = buffer;
+			*index = '\0';
+			
+			// Once we have an identifier, we can check if it matches a keyword
+			if (strcompare(buffer, "for"))
+			{
+				token.type = TokenType_FOR;
+				break;
+			}
+			if (strcompare(buffer, "while"))
+			{
+				token.type = TokenType_WHILE;
+				break;
+			}
+			if (strcompare(buffer, "return"))
+			{
+				token.type = TokenType_RETURN;
+				break;
+			}
+			if (strcompare(buffer, "do"))
+			{
+				token.type = TokenType_DO;
+				break;
+			}
+			if (strcompare(buffer, "new"))
+			{
+				token.type = TokenType_NEW;
+				break;
+			}
+			if (strcompare(buffer, "delete"))
+			{
+				token.type = TokenType_DELETE;
+				break;
+			}
+			if (strcompare(buffer, "null"))
+			{
+				token.type = TokenType_NULL;
+				break;
+			}
+			// We save the copy to the end to avoid copying for keywords
 			strcopy(token.contents, buffer);
+
+			// For boolean values we can change our token type
+			
+			if (strcompare(buffer, "true") || strcompare(buffer, "false"))
+			{
+				token.type = TokenType_BOOL;
+			}
 		}
 		else if (IsNumeric(tokenizer.location[0]))
 		{
+			//TODO: should we eat all leading 0's in a numerical value 
+			//		other than the first 0 for a float?
 			char buffer[256];
 			char* index = buffer;
 			token.type = TokenType_DIGIT;
 
-			while (IsNumeric(tokenizer.location[0]))
+			while (IsNumeric(tokenizer.location[0]) && token.length < 255)
 			{
 				index[0] = tokenizer.location[0];
 				tokenizer.location++;
 				index++;
 				token.length++;
+
+				//Look forward 1 charachter for the . operator for floats
+				if (tokenizer.location[0] == '.')
+				{
+					token.type = TokenType_FLOAT;
+					index[0] = tokenizer.location[0];
+					tokenizer.location++;
+					index++;
+					token.length++;
+				}
+				//Note: we should probably check for multiple '.', because that's not a real float
 			}
 			index[0] = '\0';
-			//token.contents = buffer;
 			strcopy(token.contents, buffer);
 		}
 	} break;
