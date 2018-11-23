@@ -36,9 +36,9 @@
 ehthumbs.db
 Thumbs.db
 
-# Visual Studio Files #
-#######################
+#Build and Debug Files
 .vscode/
+build/
 *.ilk
 *.obj
 *.pdb
