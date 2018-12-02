@@ -54,7 +54,7 @@ enum TokenType
 struct Token
 {
 	TokenType type;
-	char contents[256];
+	char* contents;
 	int length;
 }; 
 

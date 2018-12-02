@@ -66,8 +66,9 @@ Token GetToken(Tokenizer& tokenizer)
 	case '\0': 
 	{
 		token.type = TokenType_EOF;
-		char value[] = "EndSymbol";
-		strcopy(token.contents, value);
+		char* str = new char[10];
+		strcopy(str, "EndSymbol");
+		token.contents = str;
 	} break;
 
 	case '(': token.type = TokenType_LPAREN; break;
@@ -92,26 +93,24 @@ Token GetToken(Tokenizer& tokenizer)
 	case '!': token.type = TokenType_NOT; break;
 
 	//TODO: single quotes are skipped for now
-	//Note: should quotes be a single token, or each quote symbol is a token,
+	//NOTE: should everything in the quotes be a single token, 
+	// or each quote symbol is a token,
 	// and every token inbetween can be interpreted as a quote
 	case '"':
 	{
-		token.type = TokenType_STRING;
-		char buffer[256];
-		char *index = buffer;
-
 		//We need to skip the " and start copying from the next char
 		tokenizer.location++;
-
-		while (tokenizer.location[0] != '"' && token.length < 255)
+		
+		token.type = TokenType_STRING;
+		char* start_loc = tokenizer.location;
+		
+		while (tokenizer.location[0] != '"')
 		{
-			index[0] = tokenizer.location[0];
 			tokenizer.location++;
-			index++;
 			token.length++;
 
 			//Note: how do we properly handle unclosed quotation?
-			//if we reached the end of the input then we know for sure something went wrong. 
+			// if we reached the end of the input then we know for sure something went wrong. 
 			if (tokenizer.location[0] == '\0')
 			{
 				//For now we can just print an error and skip copying our values
@@ -120,74 +119,91 @@ Token GetToken(Tokenizer& tokenizer)
 				break;
 			}
 		}
-
+		
+		token.contents = new char[token.length + 1];
+		int iterator = 0;
+		while (start_loc != tokenizer.location)
+		{
+			token.contents[iterator] = *start_loc;
+			start_loc++;
+			iterator++;
+		}
+		token.contents[token.length] = '\0';
+		
 		// We also skip the end " 
 		tokenizer.location++; 
-		index[0] = '\0';
-		strcopy(token.contents, buffer);
 	}break;
 
 	default:
 	{
 		if (IsLetter(tokenizer.location[0]))
 		{
-			char buffer[256];
-			char* index = buffer;
+			// We put a pointer at the beginning, then iterate to the end
+			// of the identifier, and then copy everything inbetween into 
+			// our token - much more efficient then copying 1 lettr at a time
+			char* start_loc = tokenizer.location;
 			token.type = TokenType_IDENTIFIER;
 
 			while (IsLetter(tokenizer.location[0]) || IsNumeric(tokenizer.location[0]) || tokenizer.location[0] == '_')
 			{
-				*index = *tokenizer.location;
 				tokenizer.location++;
-				index++;
 				token.length++;
-
+				//TODO: should we limit ourselves?
 				if (token.length == 255) break;
 			}
-			*index = '\0';
+			token.contents = new char[token.length + 1];
+			int iterator = 0;
+			while (start_loc != tokenizer.location)
+			{
+				token.contents[iterator] = *start_loc;
+				start_loc++;
+				iterator++;
+			}
+			token.contents[token.length] = '\0';
 			
 			// Once we have an identifier, we can check if it matches a keyword
-			if (strcompare(buffer, "for"))
+			if (strcompare(token.contents, "for"))
 			{
 				token.type = TokenType_FOR;
 				break;
 			}
-			if (strcompare(buffer, "while"))
+			if (strcompare(token.contents, "while"))
 			{
 				token.type = TokenType_WHILE;
 				break;
 			}
-			if (strcompare(buffer, "return"))
+			if (strcompare(token.contents, "return"))
 			{
 				token.type = TokenType_RETURN;
 				break;
 			}
-			if (strcompare(buffer, "do"))
+			if (strcompare(token.contents, "do"))
 			{
 				token.type = TokenType_DO;
 				break;
 			}
-			if (strcompare(buffer, "new"))
+			if (strcompare(token.contents, "new"))
 			{
 				token.type = TokenType_NEW;
 				break;
 			}
-			if (strcompare(buffer, "delete"))
+			if (strcompare(token.contents, "delete"))
 			{
 				token.type = TokenType_DELETE;
 				break;
 			}
-			if (strcompare(buffer, "null"))
+			if (strcompare(token.contents, "null"))
 			{
 				token.type = TokenType_NULL;
 				break;
 			}
+			//TODO: before we avoided copies, now we copy early
 			// We save the copy to the end to avoid copying for keywords
-			strcopy(token.contents, buffer);
+			//strcopy(token.contents, buffer);
 
 			// For boolean values we can change our token type
-			
-			if (strcompare(buffer, "true") || strcompare(buffer, "false"))
+			if (strcompare(token.contents, "true") || 
+				strcompare(token.contents, "false"))
 			{
 				token.type = TokenType_BOOL;
 			}
@@ -195,31 +211,35 @@ Token GetToken(Tokenizer& tokenizer)
 		else if (IsNumeric(tokenizer.location[0]))
 		{
 			//TODO: should we eat all leading 0's in a numerical value 
-			//		other than the first 0 for a float?
-			char buffer[256];
-			char* index = buffer;
+			// other than the first 0 for a float?
+			char* start_loc = tokenizer.location;
 			token.type = TokenType_DIGIT;
 
-			while (IsNumeric(tokenizer.location[0]) && token.length < 255)
+			while (IsNumeric(tokenizer.location[0]))
 			{
-				index[0] = tokenizer.location[0];
 				tokenizer.location++;
-				index++;
 				token.length++;
+				//TODO: should we limit ourselves, avoid overflowing integers
+				// by accident?
 
 				//Look forward 1 charachter for the . operator for floats
 				if (tokenizer.location[0] == '.')
 				{
 					token.type = TokenType_FLOAT;
-					index[0] = tokenizer.location[0];
 					tokenizer.location++;
-					index++;
 					token.length++;
 				}
-				//Note: we should probably check for multiple '.', because that's not a real float
+				//TODO: we should probably check for multiple '.', because that's not a real float
 			}
-			index[0] = '\0';
-			strcopy(token.contents, buffer);
+			token.contents = new char[token.length + 1];
+			int iterator = 0;
+			while (start_loc != tokenizer.location)
+			{
+				token.contents[iterator] = *start_loc;
+				start_loc++;
+				iterator++;
+			}
+			token.contents[token.length] = '\0';
 		}
 	} break;
 	}

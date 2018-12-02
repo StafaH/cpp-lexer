@@ -61,14 +61,14 @@ int main()
 
 		TokenArray token_array = LexInput(input);		
 		ParseExpression(token_array.tokens, token_array.count, token_dict, ArrayCount(token_dict));
-		delete[] token_array.tokens;
-
+		
 		// Debug code for lexer, lists all tokens
-		/*
-		for (int i = 0; i < token_count; i++)
+		for (int i = 0; i < token_array.count; i++)
 		{
-			printf("Token %i: %s \n", i, tokens[i].contents);
+			printf("Token %i: %s \n", i, token_array.tokens[i].contents);
 		}
-		*/
+
+		//TODO: Cleanup of the token contents is requried!!!
+		delete[] token_array.tokens;
 	}
 }
