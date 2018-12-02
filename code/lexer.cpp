@@ -228,26 +228,37 @@ Token GetToken(Tokenizer& tokenizer)
 
 }
 
-int LexInput(char *input, Token *tokens, int max_tokens)
+TokenArray LexInput(char *input)
 {
+	//TODO: should we join TokenArray and Tokenizer, 
+	// or keep them seperate? 
 	Tokenizer tokenizer = {};
 	tokenizer.location = input;
 	bool lexing = true;
-
+	
+	TokenArray token_array = {};
+	//TODO: default initialize this?
+	token_array.capacity = 10;
+	token_array.tokens = new Token[token_array.capacity];
+	
 	while (lexing)
 	{
-		Token token = GetToken(tokenizer);
+		Token new_token = GetToken(tokenizer);
 
-		tokens[tokenizer.count] = token;
+		token_array.tokens[tokenizer.count] = new_token;
 		tokenizer.count++;
 
-		if (tokenizer.count == max_tokens)
+		if (tokenizer.count == token_array.count)
 		{
+			//TODO: Resize the array with a new heap allocation when
+			// we reach max capacity. Is there a way we can predict?
 			printf("reached maximum token capacity");
 			lexing = false;
 		}
-		if (token.type == TokenType_EOF)
+		if (new_token.type == TokenType_EOF)
 			lexing = false;
 	}
-	return tokenizer.count;
+
+	token_array.count = tokenizer.count;
+	return token_array;
 }

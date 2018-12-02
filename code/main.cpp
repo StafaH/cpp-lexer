@@ -19,11 +19,13 @@ output x
 x = 5
 ls listname - default?
 
-TODO: Implement type storage, check if types match behind the scenes
+MAIN TODO LIST: 
+-	Implement type storage, check if types match behind the scenes
 to avoid user typing out types
+-	Undo history
 */
 
-//TODO: Another implementation might be to use pointers into the original string,
+//NOTE: Another implementation might be to use pointers into the original string,
 // this will eliminate the overhead of copying + storing, as long as we hold the original
 // in memory, otherwise the tokens become invalid 
 
@@ -57,9 +59,9 @@ int main()
 		if (!input)
 			printf("no input string recieved\n");
 
-		const int MAX_TOKEN = 50;
-		Token tokens[MAX_TOKEN];
-		int token_count = LexInput(input, tokens, MAX_TOKEN);
+		TokenArray token_array = LexInput(input);		
+		ParseExpression(token_array.tokens, token_array.count, token_dict, ArrayCount(token_dict));
+		delete[] token_array.tokens;
 
 		// Debug code for lexer, lists all tokens
 		/*
@@ -68,7 +70,5 @@ int main()
 			printf("Token %i: %s \n", i, tokens[i].contents);
 		}
 		*/
-
-		ParseExpression(tokens, token_count, token_dict, ArrayCount(token_dict));
 	}
 }

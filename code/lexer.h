@@ -51,15 +51,19 @@ enum TokenType
 	TokenType_EOF
 };
 
-//TODO: Another implementation might be to use pointers into the original string,
-// this will eliminate the overhead of copying + storing, as long as we hold the original
-// in memory, otherwise the tokens become invalid 
 struct Token
 {
 	TokenType type;
 	char contents[256];
 	int length;
 }; 
+
+struct TokenArray
+{
+	Token* tokens;
+	int count;
+	int capacity;
+};
 
 struct Tokenizer
 {
