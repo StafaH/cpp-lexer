@@ -17,7 +17,7 @@ TODO: too verbose?
 New ideas:
 output x 
 x = 5
-ls listname - default?
+ls listname - just ls for default?
 
 MAIN TODO LIST: 
 -	Implement type storage, check if types match behind the scenes
@@ -61,14 +61,7 @@ int main()
 
 		TokenArray token_array = LexInput(input);		
 		ParseExpression(token_array.tokens, token_array.count, token_dict, ArrayCount(token_dict));
-		
-		// Debug code for lexer, lists all tokens
-		for (int i = 0; i < token_array.count; i++)
-		{
-			printf("Token %i: %s \n", i, token_array.tokens[i].contents);
-		}
-
-		//TODO: Cleanup of the token contents is requried!!!
-		delete[] token_array.tokens;
+		DebugPrintTokenArray(token_array);
+		DeleteTokens(token_array);
 	}
 }

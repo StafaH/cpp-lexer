@@ -250,14 +250,13 @@ Token GetToken(Tokenizer& tokenizer)
 
 TokenArray LexInput(char *input)
 {
-	//TODO: should we join TokenArray and Tokenizer, 
-	// or keep them seperate? 
+	//TODO: should we join TokenArray and Tokenizer
 	Tokenizer tokenizer = {};
 	tokenizer.location = input;
 	bool lexing = true;
 	
 	TokenArray token_array = {};
-	//TODO: default initialize this?
+	//TODO: default initialize, implement resize?
 	token_array.capacity = 10;
 	token_array.tokens = new Token[token_array.capacity];
 	
@@ -281,4 +280,28 @@ TokenArray LexInput(char *input)
 
 	token_array.count = tokenizer.count;
 	return token_array;
+}
+
+void DebugPrintTokenArray(TokenArray token_array)
+{
+	//TODO: Print token type enum
+	for (int i = 0; i < token_array.count; i++)
+	{
+		printf("Token %i: %s \n", i, token_array.tokens[i].contents);
+	}
+}
+
+void DeleteTokenContents(TokenArray token_array)
+{
+	for (int i = 0; i < token_array.count; i++)
+	{
+		delete[] token_array.tokens[i].contents;
+	}
+}
+
+void DeleteTokens(TokenArray token_array)
+{
+	DeleteTokenContents(token_array);
+	delete[] token_array.tokens;
+	token_array = {};
 }
