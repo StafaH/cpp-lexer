@@ -248,34 +248,56 @@ Token GetToken(Tokenizer& tokenizer)
 
 }
 
+void DeleteTokenContents(TokenArray token_array)
+{
+	for (int i = 0; i < token_array.count; i++)
+	{
+		delete[] token_array.tokens[i].contents;
+	}
+}
+
+void DeleteTokens(TokenArray token_array)
+{
+	DeleteTokenContents(token_array);
+	delete[] token_array.tokens;
+	token_array = {};
+}
+
+void InitializeTokenArray(TokenArray& token_array, unsigned int size)
+{
+	token_array.tokens = new Token[size];
+	token_array.capacity = size;
+}
+void ResizeTokenArray(TokenArray& token_array, unsigned int size)
+{
+	DeleteTokens(token_array);
+	token_array.tokens = new Token[size];
+	token_array.capacity = size;
+}
+
 TokenArray LexInput(char *input)
 {
-	//TODO: should we join TokenArray and Tokenizer
 	Tokenizer tokenizer = {};
 	tokenizer.location = input;
 	bool lexing = true;
 	
 	TokenArray token_array = {};
-	//TODO: default initialize, implement resize?
-	token_array.capacity = 10;
-	token_array.tokens = new Token[token_array.capacity];
+	InitializeTokenArray(token_array, 10);
 	
 	while (lexing)
 	{
-		Token new_token = GetToken(tokenizer);
-
-		token_array.tokens[tokenizer.count] = new_token;
+		token_array.tokens[tokenizer.count] = GetToken(tokenizer);
 		tokenizer.count++;
 
-		if (tokenizer.count == token_array.count)
+		if (tokenizer.count == token_array.capacity)
 		{
-			//TODO: Resize the array with a new heap allocation when
-			// we reach max capacity. Is there a way we can predict?
-			printf("reached maximum token capacity");
+			ResizeTokenArray(token_array, token_array.capacity * 2);
+		}
+
+		if (token_array.tokens[tokenizer.count - 1].type == TokenType_EOF)
+		{
 			lexing = false;
 		}
-		if (new_token.type == TokenType_EOF)
-			lexing = false;
 	}
 
 	token_array.count = tokenizer.count;
@@ -339,19 +361,4 @@ void DebugPrintTokenArray(TokenArray token_array)
 		printf("Token %i: %s - %s \n", i,TokenTypeToString(token_array.tokens[i].type),
 				token_array.tokens[i].contents);
 	}
-}
-
-void DeleteTokenContents(TokenArray token_array)
-{
-	for (int i = 0; i < token_array.count; i++)
-	{
-		delete[] token_array.tokens[i].contents;
-	}
-}
-
-void DeleteTokens(TokenArray token_array)
-{
-	DeleteTokenContents(token_array);
-	delete[] token_array.tokens;
-	token_array = {};
 }
