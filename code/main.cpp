@@ -22,7 +22,7 @@ ls listname - just ls for default?
 MAIN TODO LIST: 
 -	Implement type storage, check if types match behind the scenes
 to avoid user typing out types
--	Undo history
+-	Undo History/Redo History
 */
 
 //NOTE: Another implementation might be to use pointers into the original string,
@@ -37,7 +37,7 @@ int main()
 	// Modifiable Values
 	int third_int = 9;
 	char my_char = 'c';
-	char my_str[256] = "Test String";
+	char my_str[] = "Test String";
 	int another_int = 7;
 	int my_int = 5;
 	

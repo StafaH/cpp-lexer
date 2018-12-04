@@ -282,12 +282,62 @@ TokenArray LexInput(char *input)
 	return token_array;
 }
 
+char* TokenTypeToString(TokenType type)
+{
+	switch (type)
+	{
+		case TokenType_IDENTIFIER:
+			return "Identifier";
+		case TokenType_DIGIT:
+		case TokenType_FLOAT:
+		case TokenType_STRING:
+		case TokenType_BOOL:
+			return "Literal";
+		case TokenType_PLUS:
+		case TokenType_MINUS:
+		case TokenType_TIMES:
+		case TokenType_SLASH:
+		case TokenType_PERIOD:
+		case TokenType_EQL:
+		case TokenType_NOT:
+		case TokenType_LSS:
+		case TokenType_GTR:
+		case TokenType_LEQ:
+		case TokenType_GEQ:
+			return "Operator";
+		case TokenType_LPAREN:
+		case TokenType_RPAREN:
+		case TokenType_LBRACK:
+		case TokenType_RBRACK:
+		case TokenType_LBRACE:
+		case TokenType_RBRACE:
+		case TokenType_SEMICOLON:
+		case TokenType_COMMA:
+		case TokenType_BECOMES:
+			return "Seperator";
+		case TokenType_IF:
+		case TokenType_WHILE:
+		case TokenType_FOR:
+		case TokenType_RETURN:
+		case TokenType_DO:
+		case TokenType_NEW:
+		case TokenType_DELETE:
+		case TokenType_NULL:
+			return "Keyword";
+		case TokenType_EOF:
+			return "EndOfStream";
+		case TokenType_UNKNOWN:
+		default: return "unknown";
+	}
+}
+
 void DebugPrintTokenArray(TokenArray token_array)
 {
 	//TODO: Print token type enum
 	for (int i = 0; i < token_array.count; i++)
 	{
-		printf("Token %i: %s \n", i, token_array.tokens[i].contents);
+		printf("Token %i: %s - %s \n", i,TokenTypeToString(token_array.tokens[i].type),
+				token_array.tokens[i].contents);
 	}
 }
 
