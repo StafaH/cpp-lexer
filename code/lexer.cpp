@@ -1,5 +1,8 @@
 #include "lexer.h"
 
+#include "util.h"
+#include "stdio.h"
+
 bool IsWhiteSpace(char c)
 {
 	bool result = (c == ' ') || (c == '\t') || (c == '\f') || (c == '\v');

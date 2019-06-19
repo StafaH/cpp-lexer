@@ -1,3 +1,5 @@
+#pragma once
+
 #define VarToString(var) #var
 
 #define ArrayCount(array) sizeof(array) / sizeof(array[0])

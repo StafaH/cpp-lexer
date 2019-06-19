@@ -24,3 +24,9 @@ struct TokenDictionaryItem
 	void *value;
 	char *datatype;
 };
+
+void ParseChangeExpression(Token *tokens, int token_count, TokenDictionaryItem *dict, int dict_count);
+
+void ParseListExpression(Token *tokens, int token_count, TokenDictionaryItem *dict, int dict_count);
+
+void ParseExpression(Token *tokens, int token_count, TokenDictionaryItem *dict, int dict_count)

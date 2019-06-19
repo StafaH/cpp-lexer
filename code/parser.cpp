@@ -1,5 +1,9 @@
 #include "parser.h"
 
+#include "lexer.h"
+#include "util.h"
+#include "stdio.h"
+
 void ParseChangeExpression(Token *tokens, int token_count, TokenDictionaryItem *dict, int dict_count)
 {
 	for (int i = 0; i < dict_count; i++)
